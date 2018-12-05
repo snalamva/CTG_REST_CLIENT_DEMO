@@ -1,0 +1,105 @@
+/* 
+ * List of all cheese from the database
+ */
+#include <stdio.h>  
+#include <string.h>
+#include <sql.h>
+
+#define NOCHEESE     "There is no such cheese in the table"
+#define UPDATECHEESE "The cheese table was successfully updated"
+#define SQLNOTFOUND  100
+#define DATABASE     "cicstest"
+#define USERNAME     "cicstest"
+#define PASSWORD     "cicstest"
+#define MAXINDEX     14
+
+
+struct cheese
+{
+    char    name[15];
+    char    supplier[30];
+    char    supplier_address[30];
+    int     order_quantity;
+};
+
+struct cheese *cheeselist;
+
+EXEC SQL INCLUDE sqlca;
+  
+EXEC SQL BEGIN DECLARE SECTION;
+char dbase[15];
+char myusername[15];
+char mypasswd[15];
+char name[15];
+char name_recv[15];
+char supplier[30];
+char supplier_address[30]; 
+sqlint32 order_quantity;
+EXEC SQL END DECLARE SECTION;
+
+EXEC SQL DECLARE cheesecsr CURSOR FOR
+        SELECT name, supplier, supplier_address, order_quantity
+        FROM cics.cheese;
+
+int rcode;
+char *commarea;
+
+main()
+{
+    int i=0;
+
+    EXEC CICS ADDRESS EIB(dfheiptr);
+    EXEC CICS ADDRESS COMMAREA(commarea);
+
+    cheeselist = (struct cheese *) commarea;
+
+    fprintf(stderr, "[CICS] Commarea: %p Commarea size: %d\n", commarea, dfheiptr->eibcalen);
+    strcpy(name_recv, cheeselist->name);
+    fprintf(stderr, "[CICS] Commarea: %p Commarea Input for Query: %s\n", commarea, name_recv);
+
+    strcpy(dbase,DATABASE);
+    strcpy(myusername,USERNAME);
+    strcpy(mypasswd,PASSWORD);
+
+    EXEC SQL CONNECT TO :dbase USER :myusername USING :mypasswd; 
+
+        memset(name, '\0', sizeof(name));
+        memset(supplier, '\0', sizeof(supplier));
+        memset(supplier_address, '\0', sizeof(supplier_address));
+        order_quantity = 0;
+
+        EXEC SQL SELECT * INTO :name, :supplier, :supplier_address, :order_quantity from cics.cheese where name = :name_recv;
+
+        if (sqlca.sqlcode != 0)
+        {
+               strcpy(cheeselist->name, "RECORD NOT FND");
+               fprintf(stderr, "[CICS] Commarea Output: %p cheese name: %s\n", commarea, cheeselist->name); 
+        }
+        else
+        {
+           strcpy(cheeselist->name, name);
+           strcpy(cheeselist->supplier, supplier);
+           strcpy(cheeselist->supplier_address, supplier_address);
+           cheeselist->order_quantity = order_quantity;
+
+          fprintf(stderr, "[CICS] Commarea Output: %p cheese name: %s\n", commarea, cheeselist->name); 
+          fprintf(stderr, "[CICS] Commarea Output: %p cheese supplier: %s\n", commarea, cheeselist->supplier); 
+          fprintf(stderr, "[CICS] Commarea Output: %p cheese supplier_address: %s\n", commarea, cheeselist->supplier_address); 
+          fprintf(stderr, "[CICS] Commarea Output: %p cheese quantity: %d\n", commarea, cheeselist->order_quantity); 
+        }
+
+    EXEC CICS SYNCPOINT RESP(rcode);
+    if (rcode != DFHRESP(NORMAL))
+    {
+        EXEC SQL ROLLBACK WORK;
+        EXEC SQL CONNECT RESET;
+        EXEC CICS ABEND ABCODE("X011");
+    }
+
+    EXEC SQL COMMIT WORK;
+
+    EXEC SQL CONNECT RESET;
+
+    EXEC CICS RETURN;
+
+}

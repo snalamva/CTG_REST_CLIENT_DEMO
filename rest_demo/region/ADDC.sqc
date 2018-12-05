@@ -1,0 +1,128 @@
+/* 
+ * Get details for the cheese
+ */
+#include <stdio.h>  
+#include <string.h>
+#include <sql.h>
+
+#define NOCHEESE     "There is no such cheese in the table"
+#define UPDATECHEESE "The cheese table was successfully updated"
+#define SQLNOTFOUND  100
+#define DATABASE     "cicstest"
+#define USERNAME     "cicstest"
+#define PASSWORD     "cicstest"
+#define MAXINDEX     14
+
+struct cheese
+{
+    char    name[15];
+    char    supplier[30];
+    char    supplier_address[30];
+    int     order_quantity;
+};
+
+struct cheese *cheeselist;
+
+EXEC SQL INCLUDE sqlca;
+  
+EXEC SQL BEGIN DECLARE SECTION;
+char dbase[15];
+char myusername[15];
+char mypasswd[15];
+char name[15];
+char givenname[15];
+char supplier[30];
+char supplier_address[30]; 
+sqlint32 order_quantity;
+EXEC SQL END DECLARE SECTION;
+
+int given_order_quantity;
+int rcode;
+char *commarea;
+
+main()
+{
+    EXEC CICS ADDRESS EIB(dfheiptr);
+    EXEC CICS ADDRESS COMMAREA(commarea);
+      /*
+    EXEC SQL WHENEVER SQLERROR GOTO :errexit;
+        */
+
+    cheeselist = (struct cheese *) commarea;
+
+    fprintf(stderr, "[CICS] Commarea: %p Commarea size: %d\n", commarea, dfheiptr->eibcalen);
+    
+    strcpy(dbase,DATABASE);
+    strcpy(myusername,USERNAME);
+    strcpy(mypasswd,PASSWORD);
+
+    EXEC SQL CONNECT TO :dbase USER :myusername USING :mypasswd; 
+
+    memset(name, '\0', sizeof(name));
+    memset(supplier, '\0', sizeof(supplier));
+    memset(supplier_address, '\0', sizeof(supplier_address));
+    order_quantity = 0;
+
+    /*
+    strcpy(givenname, cheeselist[0].name);
+    strcpy(name, cheeselist[0].name);
+    strcpy(supplier, cheeselist[0].supplier);
+    strcpy(supplier_address, cheeselist[0].supplier_address);
+    order_quantity = cheeselist[0].order_quantity;
+    */
+    strcpy(givenname, cheeselist->name);
+    strcpy(name, cheeselist->name);
+    strcpy(supplier, cheeselist->supplier);
+    strcpy(supplier_address, cheeselist->supplier_address);
+    order_quantity = cheeselist->order_quantity;
+    
+
+    fprintf(stderr, "[CICS] Given cheese name %s\n", name);
+    fprintf(stderr, "[CICS] Given cheese supplier name %s\n", supplier);
+    fprintf(stderr, "[CICS] Given cheese supplier address %s\n", supplier_address);
+    fprintf(stderr, "[CICS] Given order quantity %d\n", order_quantity);
+
+    EXEC SQL SELECT name
+        INTO :name
+        FROM cics.cheese
+        WHERE name = :givenname;
+    
+    if (sqlca.sqlcode == SQLNOTFOUND)
+    {
+        EXEC SQL INSERT INTO cics.cheese
+            (name, supplier, supplier_address, order_quantity)
+            VALUES (:name, :supplier, :supplier_address, :order_quantity);
+    
+        fprintf(stderr, "[CICS] Sucessfully added record.\n");
+    }
+    else
+    {
+        fprintf(stderr, "[CICS] Record already exists. So cannot add.\n");
+        cheeselist[0].order_quantity = -1;
+    }
+
+    EXEC CICS SYNCPOINT RESP(rcode);
+    if (rcode != DFHRESP(NORMAL))
+    {
+        EXEC SQL ROLLBACK WORK;
+        EXEC SQL CONNECT RESET;
+        EXEC CICS ABEND ABCODE("X011");
+    }
+
+    EXEC SQL COMMIT WORK;
+    EXEC SQL CONNECT RESET;
+
+    EXEC CICS RETURN;
+
+errexit:
+
+    fprintf(stderr, "[CICS] Failed to add record!\n");
+    cheeselist[0].order_quantity = -2;
+
+    EXEC CICS SYNCPOINT ROLLBACK;
+    EXEC SQL ROLLBACK WORK;
+    EXEC SQL CONNECT RESET;
+    
+    EXEC CICS RETURN;
+}
+

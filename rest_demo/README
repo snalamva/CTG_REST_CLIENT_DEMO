@@ -1,0 +1,46 @@
+This is sample program to shows REST WEBSERVICE DEMO using CTG and TXSeries
+
+This is sample program to shows REST WEBSERVICE DEMO using CTG and TXSeries,
+Execute run.sh script for configuration for demo ,and before executing , make the f
+following changes,
+
+1. Add following entry to /etc/services file to use the tcp/ip port for the demo
+
+ipicdemo   55567/tcp    # Entry of IPIC listener on CICS region
+ctgwd   55568/tcp       # Entry for CTG HTTP client for REST Clients to send requests
+tcpdemo 55569/tcp       # Entry for TCP-IP Listener used for ECI clients" >> /etc/services
+
+2. Change the DB2 DB details on the script,
+    region/compile_cics_program.sh script
+3. Then run the script run.sh for configuration.
+4. Append the content of file ctg_section.ini (after changing HOSTNAME) to /opt/IBM/cicstg/binctg.ini file
+5. Start the CTG deamon
+
+  # ctgstart
+
+
+Usage of from REST clients:
+-----------
+
+Use below URI for ADDC program,  and
+
+http://HOSTNAME:55568//CHEESE/CHEESADD
+
+
+Body content Type choose as application/JSON
+
+Add the following JSON body to 
+
+{"ADDCOperation":{"cheese":{"name":"MyTestCheese","supplier":"MyTestSupplier","supplier_address":"Addr_Bangalore","order_quantity":"100"}}}
+
+
+Use below URI for ADDC program,  or GETC program from REST client
+
+http://HOSTNAME:55568//CHEESE/CHEESGET
+
+Body content Type choose as application/JSON
+
+Add the following JSON body to 
+
+{"GETCOperation":{"cheese_req":{"name":"Stilton","supplier":"","supplier_address":"","order_quantity":""}}}
+

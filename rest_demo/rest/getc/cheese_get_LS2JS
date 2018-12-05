@@ -1,0 +1,73 @@
+#
+# Sample parameters file to run the JSON web services assistant 
+# to convert from a language structure to a JSON schema.
+#
+# Licensed Materials - Property of IBM  
+#  
+# 5724-I81,5725-B65 
+#  
+# (C) Copyright IBM Corp. 2014 All Rights Reserved.  
+#  
+# US Government Users Restricted Rights - Use, duplication or  
+# disclosure restricted by GSA ADP Schedule Contract with  
+# IBM Corp.  
+#
+# Status: Version 9 Release 1 
+#
+# Before running with this parameters file, you will need to globally 
+# replace the variables:
+#    <Request schema file>
+#       The fully qualified path for the generated JSON
+#       schema file that represents the request, 
+#       e.g. /u/userid/schema/request.json
+#    <Response schema file>
+#       The fully qualified path for the generated JSON
+#       schema file that represents the response, 
+#       e.g. /u/userid/schema/response.json
+#    <Request language structure file>
+#       The fully qualified path for the source language   
+#       structure for a request, 
+#       e.g. /u/userid/cobol/request.copybook
+#    <Response language structure file>
+#       The fully qualified path for the source language   
+#       structure for a response, 
+#       e.g. /u/userid/cobol/response.copybook
+#    <WSBind file>
+#       The fully qualified path for the generated web
+#       service bind file to be used by CICS TG, 
+#       e.g. /u/userid/wsbind/program.wsbind
+#    <Program name>
+#       The name of the CICS program used by the web
+#       service, e.g. PROGRAM
+#    <Other options>
+#       A place holder for any other (optional) parameters
+#       to the JSON Assistant, see the product documentation.
+# 
+# Additionally, set appropriate values for the following parameters:
+#    LANG
+#       The programming language for the LS-REQUEST and LS-RESPONSE
+#       files.
+#    PGMINT
+#       How CICS passes data to the target program.
+#    TARGET-CICS-PLATFORM
+#       The platform the target CICS server is running on.
+# 
+# JSON web services assistant parameters can be continued over
+# multiple lines by using a backslash '\' character at the end of a
+# line that is to be continued. For example:
+# JSON-SCHEMA-RESPONSE=/u/userid/respo\
+# nse.json 
+#
+# See the product documentation for the full list of parameters.
+#
+LANG=C
+MAPPING-MODE=LS2JS 
+JSON-SCHEMA-REQUEST=cheese_json_req
+JSON-SCHEMA-RESPONSE=cheese_json_res
+LS-REQUEST=cheese_req.h
+LS-RESPONSE=cheese_res.h 
+STRUCTURE=(cheese_req,cheese_res) 
+WSBIND=cheese_get.wsbind
+PGMNAME=GETC
+PGMINT=COMMAREA
+TARGET-CICS-PLATFORM=AIX
