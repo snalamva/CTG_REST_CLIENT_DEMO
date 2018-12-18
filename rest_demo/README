@@ -46,7 +46,7 @@ tcpdemo 55569/tcp       # Entry for TCP-IP Listener used for ECI clients" >> /et
 
 
 
-Usage of from REST clients:
+Usage of Demo from REST clients:
 ==========================
 For testing the applications, you can use REST clients, Advance Rest Client (ARC) plugin added
 on Chrome browser can be used for testing,
